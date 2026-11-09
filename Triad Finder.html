@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Triad Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f1efe8;--fg:#1e2a28;--mut:#5d6b68;--card:#fff;--line:#d6d2c4;--acc:#1f6f64;--r:#c98a14;--t:#1f8f7e;--f:#c4543b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131c1b;--fg:#ebe6d8;--mut:#9aa8a4;--card:#1b2827;--line:#2c3c3a;--acc:#6fc3b2;--r:#e8b04b;--t:#6fc3b2;--f:#e0775e}}
+:root[data-theme="dark"]{--bg:#131c1b;--fg:#ebe6d8;--mut:#9aa8a4;--card:#1b2827;--line:#2c3c3a;--acc:#6fc3b2;--r:#e8b04b;--t:#6fc3b2;--f:#e0775e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Bricolage Grotesque',system-ui,sans-serif;line-height:1.5}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:2rem;font-weight:800;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mut);margin:0 0 20px;max-width:60ch}
+textarea{width:100%;font:inherit;font-size:1.1rem;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);resize:vertical;min-height:72px}
+textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font:inherit;border:0;background:var(--card);color:var(--fg);padding:8px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--acc);color:var(--bg);font-weight:600}
+.ghost{font:inherit;border:1px solid var(--line);background:none;color:var(--fg);border-radius:10px;padding:8px 14px;cursor:pointer}
+.lg{display:flex;gap:14px;font-size:.9rem;color:var(--mut);flex-wrap:wrap}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.chord{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:16px 0}
+.chord h2{margin:0;font-size:1.5rem;font-weight:800}
+.chord h2 small{font-weight:400;font-size:.95rem;color:var(--mut);margin-left:8px}
+.neck{overflow-x:auto;margin:10px 0 6px;-webkit-overflow-scrolling:touch}
+.neck svg{display:block;min-width:700px;width:100%;height:auto}
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.groups h3{font-size:.95rem;margin:0 0 6px;color:var(--mut);font-weight:600}
+.chip{display:block;width:100%;text-align:left;font:inherit;font-variant-numeric:tabular-nums;background:none;border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:6px 10px;margin-bottom:6px;cursor:pointer}
+.chip b{letter-spacing:.12em}
+.chip span{color:var(--mut);font-size:.85rem;margin-left:8px}
+.chip[aria-pressed=true]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 15%,transparent)}
+.warn{color:var(--f)}
+.tabs{margin:0 0 14px}
+.chord>h3{font-size:.95rem;margin:12px 0 6px;color:var(--mut);font-weight:600}
+.bx{display:flex;flex-wrap:wrap;gap:12px 16px}
+.bxc{text-align:center;font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums}
+.bxc svg{display:block;width:96px;height:auto;margin:0 auto 2px}
+input[type=text]{font:inherit;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);min-width:220px;flex:1}
+#pttl{font-size:1.4rem;font-weight:800;margin:8px 0}
+@media print{
+:root,:root[data-theme="dark"],:root:not([data-theme="light"]){--bg:#fff;--fg:#111;--mut:#555;--card:#fff;--line:#ccc;--r:#c98a14;--t:#1f8f7e;--f:#c4543b}
+body{background:#fff;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1,.sub,label,textarea,.row,.tabs,#msg,#bxbar{display:none!important}
+main{padding:0;max-width:none}
+.chord{break-inside:avoid;border-color:#ccc}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Triad Finder</h1>
+<p class="sub">Type the open chords of a song and get every closed triad for them up the neck, on the string set you choose. Tap a shape to see it and hear it.</p>
+<div class="seg tabs" id="tabs" role="group" aria-label="Page"><button data-v="find" aria-pressed="true">Find triads</button><button data-v="box" aria-pressed="false">Chord boxes</button></div>
+<label for="in" class="sub" style="display:block;margin-bottom:6px">Chords (spaces or commas)</label>
+<textarea id="in" spellcheck="false" autocapitalize="off">G Em C D</textarea>
+<div class="row">
+ <div class="seg" id="sets" role="group" aria-label="String set">
+  <button data-s="1-3" aria-pressed="false">Strings 1–3</button>
+  <button data-s="2-4" aria-pressed="true">Strings 2–4</button>
+  <button data-s="4-6" aria-pressed="false">Strings 4–6</button>
+ </div>
+ <button class="ghost" id="ex">Try an example</button>
+</div>
+<div class="lg"><span><i style="background:var(--r)"></i>Root</span><span><i style="background:var(--t)"></i>Third (or 2nd/4th)</span><span><i style="background:var(--f)"></i>Fifth</span></div>
+<p id="msg" class="warn"></p>
+<div id="out"></div>
+<div id="boxes" hidden>
+ <div class="row" id="bxbar"><input type="text" id="ttl" placeholder="Song title (optional)" aria-label="Song title"><label><input type="checkbox" id="selonly"> Only the shape I tapped per chord</label><button class="ghost" id="pr">Print / save as PDF</button></div>
+ <h2 id="pttl"></h2>
+ <div id="bxout"></div>
+</div>
+</main>
+<script>
+const N={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const SH=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const FL=['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const TUN=[64,59,55,50,45,40]; // string 1 (high e) → string 6
+const SETS={'1-3':[0,1,2],'2-4':[1,2,3],'4-6':[3,4,5]};
+const INT={maj:[0,4,7],min:[0,3,7],dim:[0,3,6],aug:[0,4,8],sus2:[0,2,7],sus4:[0,5,7]};
+const TNAME={maj:'major',min:'minor',dim:'diminished',aug:'augmented',sus2:'sus2',sus4:'sus4'};
+const THIRD={maj:'3',min:'♭3',dim:'♭3',aug:'3',sus2:'2',sus4:'4'};
+const FIFTH={dim:'♭5',aug:'♯5'};
+const INV=['Root position','1st inversion','2nd inversion'];
+let setKey='2-4',chords=[],bad=[],active={},ac;
+
+function parse(tok){
+  const m=tok.match(/^([A-Ga-g])([#b♯♭]?)([^\/]*)(?:\/.*)?$/); if(!m)return null;
+  let r=N[m[1].toUpperCase()],a=m[2]; if(a==='#'||a==='♯')r++; if(a==='b'||a==='♭')r--; r=(r+12)%12;
+  const q=m[3]; let t='maj';
+  if(/^(dim|°|o|m7b5|m7♭5|ø)/.test(q))t='dim';
+  else if(/^(aug|\+)/.test(q))t='aug';
+  else if(/^sus2/.test(q))t='sus2';
+  else if(/^sus/.test(q))t='sus4';
+  else if(/^m(?!aj)/.test(q))t='min';
+  const flat=a==='b'||a==='♭'||m[1].toUpperCase()==='F';
+  const pcs=INT[t].map(i=>(r+i)%12);
+  return{name:tok,t,pcs,notes:pcs.map(p=>(flat?FL:SH)[p])};
+}
+function voicings(ch,set){
+  const [a,b,c]=set,out=[];
+  for(let fc=0;fc<=15;fc++)for(let fb=0;fb<=15;fb++)for(let fa=0;fa<=15;fa++){
+    const p=[TUN[c]+fc,TUN[b]+fb,TUN[a]+fa];
+    if(!(p[0]<p[1]&&p[1]<p[2])||p[2]-p[0]>=12)continue;
+    const fr=[fc,fb,fa].filter(x=>x>0);
+    if(fr.length&&Math.max(...fr)-Math.min(...fr)>4)continue;
+    const roles=p.map(x=>ch.pcs.indexOf(x%12));
+    if(roles.includes(-1)||new Set(roles).size<3)continue;
+    out.push({pos:{[c]:fc,[b]:fb,[a]:fa},p,roles,inv:roles[0],lo:fr.length?Math.min(...fr):0});
+  }
+  return out.sort((x,y)=>x.lo-y.lo);
+}
+const tab=v=>{const s=[];for(let i=5;i>=0;i--)s.push(v.pos[i]??'x');return s.join(' ')};
+const col=r=>['var(--r)','var(--t)','var(--f)'][r];
+const lab=(ch,r)=>r===0?'R':r===1?THIRD[ch.t]:(FIFTH[ch.t]||'5');
+
+function neck(ch,vs,set,act){
+  const fw=48,L=34,top=18,sp=22,W=L+15*fw+8,H=top+5*sp+34;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fretboard for ${ch.name}">`;
+  s+=`<rect x="${L}" y="${top-10}" width="${15*fw}" height="${5*sp+20}" rx="3" fill="#3b2a1f"/>`;
+  [3,5,7,9,15].forEach(f=>s+=`<circle cx="${L+(f-.5)*fw}" cy="${top+2.5*sp}" r="5" fill="#d8c9a8" opacity=".25"/>`);
+  s+=`<circle cx="${L+11.5*fw}" cy="${top+1.5*sp}" r="5" fill="#d8c9a8" opacity=".25"/><circle cx="${L+11.5*fw}" cy="${top+3.5*sp}" r="5" fill="#d8c9a8" opacity=".25"/>`;
+  for(let f=0;f<=15;f++)s+=`<line x1="${L+f*fw}" x2="${L+f*fw}" y1="${top-10}" y2="${top+5*sp+10}" stroke="${f?'#9c8f78':'#e8dfc8'}" stroke-width="${f?1.5:4}"/>`;
+  for(let i=0;i<6;i++)s+=`<line x1="${L}" x2="${L+15*fw}" y1="${top+i*sp}" y2="${top+i*sp}" stroke="#d9d3c0" stroke-width="${1+i*.35}" opacity="${set.includes(i)?1:.22}"/>`;
+  for(let f=1;f<=15;f++)s+=`<text x="${L+(f-.5)*fw}" y="${H-6}" text-anchor="middle" font-size="12" fill="var(--mut)">${f}</text>`;
+  for(let i=0;i<6;i++)s+=`<text x="12" y="${top+i*sp+4}" text-anchor="middle" font-size="11" fill="var(--mut)">${i+1}</text>`;
+  const dots=[];
+  vs.forEach((v,k)=>{
+    const [a,b,c]=set,order=[c,b,a];
+    order.forEach((si,j)=>dots.push({si,f:v.pos[si],r:v.roles[j],k}));
+  });
+  const uniq={};dots.forEach(d=>{const key=d.si+'_'+d.f;if(!uniq[key]||d.k===act)uniq[key]=d});
+  const list=Object.values(uniq);
+  const draw=(d,on)=>{
+    const x=d.f===0?L-14:L+(d.f-.5)*fw,y=top+d.si*sp;
+    return `<circle cx="${x}" cy="${y}" r="${on?9.5:8}" fill="${col(d.r)}" opacity="${act==null||on?1:.25}" ${on?'stroke="#fff" stroke-width="2"':''}/><text x="${x}" y="${y+3.6}" text-anchor="middle" font-size="10" font-weight="700" fill="#101614" opacity="${act==null||on?1:.35}">${lab(ch,d.r)}</text>`};
+  const actKeys=new Set(dots.filter(d=>d.k===act).map(d=>d.si+'_'+d.f));
+  list.filter(d=>!actKeys.has(d.si+'_'+d.f)).forEach(d=>s+=draw(d,false));
+  list.filter(d=>actKeys.has(d.si+'_'+d.f)).forEach(d=>s+=draw(d,true));
+  return s+'</svg>';
+}
+
+function render(){
+  const set=SETS[setKey],out=document.getElementById('out');
+  out.innerHTML='';renderBoxes();
+  document.getElementById('msg').textContent=bad.length?`Couldn’t read: ${bad.join(', ')}`:'';
+  chords.forEach((ch,ci)=>{
+    const vs=voicings(ch,set),act=active[ch.name+setKey];
+    const el=document.createElement('section');el.className='chord';
+    el.innerHTML=`<h2>${ch.name}<small>${ch.notes.join(' – ')} · ${TNAME[ch.t]} triad</small></h2><div class="neck">${neck(ch,vs,set,act)}</div><div class="groups"></div>`;
+    const g=el.querySelector('.groups');
+    [0,1,2].forEach(inv=>{
+      const col=document.createElement('div');col.innerHTML=`<h3>${INV[inv]}</h3>`;
+      vs.forEach((v,k)=>{ if(v.inv!==inv)return;
+        const b=document.createElement('button');b.className='chip';b.setAttribute('aria-pressed',act===k);
+        const fr=Object.values(v.pos).filter(x=>x>0);
+        b.innerHTML=`<b>${tab(v)}</b><span>fret ${fr.length?Math.min(...fr):'open'}</span>`;
+        b.onclick=()=>{active[ch.name+setKey]=act===k?undefined:k;render();if(act!==k)play(v)};
+        col.appendChild(b);
+      });
+      g.appendChild(col);
+    });
+    out.appendChild(el);
+  });
+}
+function play(v){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    v.p.forEach((m,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*.07;
+      o.type='triangle';o.frequency.value=440*Math.pow(2,(m-69)/12);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.22,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+1.6);
+      o.connect(g).connect(ac.destination);o.start(t);o.stop(t+1.7);
+    });
+  }catch(e){}
+}
+function update(){
+  const toks=document.getElementById('in').value.split(/[\s,|;]+/).filter(Boolean);
+  chords=[];bad=[];const seen=new Set();
+  toks.forEach(t=>{if(seen.has(t))return;seen.add(t);const c=parse(t);c?chords.push(c):bad.push(t)});
+  render();
+}
+document.getElementById('in').addEventListener('input',update);
+document.getElementById('ex').onclick=()=>{document.getElementById('in').value='Am C G D Em F Dsus4 A7';update()};
+document.querySelectorAll('#sets button').forEach(b=>b.onclick=()=>{
+  setKey=b.dataset.s;document.querySelectorAll('#sets button').forEach(x=>x.setAttribute('aria-pressed',x===b));render();
+});
+function box(ch,v,set){
+  const order=[set[2],set[1],set[0]],fr=Object.values(v.pos).filter(x=>x>0);
+  const lo=fr.length?Math.min(...fr):1,start=lo===1?1:lo,rows=5,cs=11,rh=17,L=26,T=22;
+  let s=`<svg viewBox="0 0 96 ${T+rows*rh+8}" role="img" aria-label="${ch.name} chord box, ${tab(v)}">`;
+  for(let r=0;r<=rows;r++)s+=`<line x1="${L}" x2="${L+5*cs}" y1="${T+r*rh}" y2="${T+r*rh}" stroke="var(--fg)" stroke-width="${r===0&&start===1?3:1}"/>`;
+  for(let i=0;i<6;i++)s+=`<line x1="${L+i*cs}" x2="${L+i*cs}" y1="${T}" y2="${T+rows*rh}" stroke="var(--fg)"/>`;
+  if(start>1)s+=`<text x="${L-6}" y="${T+rh/2+4}" text-anchor="end" font-size="11" fill="var(--fg)">${start}fr</text>`;
+  for(let i=0;i<6;i++){
+    const si=5-i,f=v.pos[si],x=L+i*cs;
+    if(f===undefined)s+=`<text x="${x}" y="${T-7}" text-anchor="middle" font-size="10" fill="var(--mut)">×</text>`;
+    else if(f===0)s+=`<circle cx="${x}" cy="${T-9}" r="3.5" fill="none" stroke="var(--fg)"/>`;
+    else{const y=T+(f-start+.5)*rh,r=v.roles[order.indexOf(si)];
+      s+=`<circle cx="${x}" cy="${y}" r="5.4" fill="${col(r)}"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="7.5" font-weight="700" fill="#101614">${lab(ch,r)}</text>`}
+  }
+  return s+'</svg>';
+}
+function renderBoxes(){
+  const set=SETS[setKey],o=document.getElementById('bxout'),sel=document.getElementById('selonly').checked;
+  o.innerHTML='';
+  document.getElementById('pttl').textContent=(document.getElementById('ttl').value.trim()||'Triads')+' · strings '+setKey;
+  let n=0;
+  chords.forEach(ch=>{
+    const vs=voicings(ch,set),act=active[ch.name+setKey];
+    let h='';
+    [0,1,2].forEach(inv=>{
+      const L=vs.map((v,k)=>[v,k]).filter(([v,k])=>v.inv===inv&&(!sel||k===act));
+      if(!L.length)return;n+=L.length;
+      h+=`<h3>${INV[inv]}</h3><div class="bx">`+L.map(([v])=>`<div class="bxc">${box(ch,v,set)}<div>${tab(v)}</div></div>`).join('')+'</div>';
+    });
+    if(!h)return;
+    const sec=document.createElement('section');sec.className='chord';
+    sec.innerHTML=`<h2>${ch.name}<small>${ch.notes.join(' – ')} · ${TNAME[ch.t]} triad</small></h2>`+h;
+    o.appendChild(sec);
+  });
+  if(!n)o.innerHTML='<p class="warn">Nothing selected yet. Tap a shape on the Find triads page, or untick the box above.</p>';
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.getElementById('out').hidden=b.dataset.v!=='find';
+  document.getElementById('boxes').hidden=b.dataset.v!=='box';
+});
+['ttl','selonly'].forEach(id=>{const e=document.getElementById(id);e.addEventListener('input',renderBoxes);e.addEventListener('change',renderBoxes)});
+document.getElementById('pr').onclick=()=>{try{window.print()}catch(e){alert('Use your browser’s Print option and choose Save as PDF.')}};
+update();
+</script>
+</body>
+</html>
